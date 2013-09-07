@@ -14,6 +14,27 @@ PBL_APP_INFO(MY_UUID,
 Window window;
 TextLayer hello_layer;
 
+void select_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
+  DictionaryIterator *iter;
+
+  if (app_message_out_get(&iter) != APP_MSG_OK) {
+    return;
+  }
+  if (dict_write_uint8(iter, PEBBLE_PAGER_MESSAGE, 0) != DICT_OK) {
+    return;
+  }
+  app_message_out_send();
+  app_message_out_release();
+  text_layer_set_text(&hello_layer, "Sent");
+}
+
+void config_provider(ClickConfig **config, Window *window) {
+  config[BUTTON_ID_SELECT]->click.handler = (ClickHandler) select_single_click_handler;
+  config[BUTTON_ID_SELECT]->click.repeat_interval_ms = 1000; // "hold-to-repeat" gets overridden if there's a long click handler configured!
+
+  (void)window;
+}
+
 void handle_init(AppContextRef ctx) {
   window_init(&window, "Pebble Pager");
   window_stack_push(&window, true /* Animated */);
@@ -23,6 +44,7 @@ void handle_init(AppContextRef ctx) {
   text_layer_set_text(&hello_layer, "Press select to page!");
   text_layer_set_font(&hello_layer, fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21));
   layer_add_child(&window.layer, &hello_layer.layer);
+  window_set_click_config_provider(&window, (ClickConfigProvider) config_provider);
 }
 
 void out_sent_handler(DictionaryIterator *sent, void *context) {
@@ -47,25 +69,5 @@ void pbl_main(void *params) {
     },
   };
   app_event_loop(params, &handlers);
-}
-
-void select_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
-  DictionaryIterator *iter;
-
-  if (app_message_out_get(&iter) != APP_MSG_OK) {
-    return;
-  }
-  if (dict_write_uint8(iter, PEBBLE_PAGER_MESSAGE, 0) != DICT_OK) {
-    return;
-  }
-  app_message_out_send();
-  app_message_out_release();
-}
-
-void config_provider(ClickConfig **config, Window *window) {
-  config[BUTTON_ID_SELECT]->click.handler = (ClickHandler) select_single_click_handler;
-  config[BUTTON_ID_SELECT]->click.repeat_interval_ms = 1000; // "hold-to-repeat" gets overridden if there's a long click handler configured!
-
-  (void)window;
 }
 
