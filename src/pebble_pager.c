@@ -2,6 +2,7 @@
 #include "pebble_app.h"
 #include "pebble_fonts.h"
 
+#define PEBBLE_PAGER_MESSAGE 0xA1
 
 #define MY_UUID { 0x38, 0x9D, 0x91, 0xC5, 0xF8, 0x4C, 0x4F, 0xC1, 0xA1, 0xA0, 0xBA, 0xA8, 0xEA, 0x1B, 0x43, 0x6F }
 PBL_APP_INFO(MY_UUID,
@@ -24,16 +25,41 @@ void handle_init(AppContextRef ctx) {
   layer_add_child(&window.layer, &hello_layer.layer);
 }
 
+void out_sent_handler(DictionaryIterator *sent, void *context) {
+  // outgoing message was delivered
+}
+void out_fail_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
+  // outgoing message failed
+}
 
 void pbl_main(void *params) {
   PebbleAppHandlers handlers = {
-    .init_handler = &handle_init
+    .init_handler = &handle_init,
+    .messaging_info = {
+      .buffer_sizes = {
+        .inbound = 64,
+        .outbound = 16,
+      },
+      .default_callbacks.callbacks = {
+        .out_sent = out_sent_handler,
+        .out_failed = out_fail_handler,
+      },
+    },
   };
   app_event_loop(params, &handlers);
 }
 
 void select_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
+  DictionaryIterator *iter;
 
+  if (app_message_out_get(&iter) != APP_MSG_OK) {
+    return;
+  }
+  if (dict_write_uint8(iter, PEBBLE_PAGER_MESSAGE, 0) != DICT_OK) {
+    return;
+  }
+  app_message_out_send();
+  app_message_out_release();
 }
 
 void config_provider(ClickConfig **config, Window *window) {
