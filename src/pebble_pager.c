@@ -8,7 +8,7 @@
 PBL_APP_INFO(MY_UUID,
              "Pebble Pager", "Pebble Pager",
              1, 0, /* App version */
-             DEFAULT_MENU_ICON,
+             RESOURCE_ID_PEBBLE_PAGER_ICON_BLACK,
              APP_INFO_STANDARD_APP);
 
 Window window;
@@ -36,12 +36,13 @@ void config_provider(ClickConfig **config, Window *window) {
 }
 
 void handle_init(AppContextRef ctx) {
+  resource_init_current_app(&VERSION);
   window_init(&window, "Pebble Pager");
   window_stack_push(&window, true /* Animated */);
 
   text_layer_init(&hello_layer, GRect(0, 65, 144, 30));
   text_layer_set_text_alignment(&hello_layer, GTextAlignmentCenter);
-  text_layer_set_text(&hello_layer, "Press select to page!");
+  text_layer_set_text(&hello_layer, "Page!");
   text_layer_set_font(&hello_layer, fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21));
   layer_add_child(&window.layer, &hello_layer.layer);
   window_set_click_config_provider(&window, (ClickConfigProvider) config_provider);
