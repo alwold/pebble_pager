@@ -6,6 +6,11 @@
       "type":"png-trans",
       "defName":"PEBBLE_PAGER_ICON",
       "file":"images/icon.png"
+     },
+     {
+      "type":"png-trans",
+      "defName":"PEBBLE_PAGER_ARROW",
+      "file":"images/arrow.png"
      }
 	  ]
 }

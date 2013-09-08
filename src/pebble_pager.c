@@ -14,6 +14,9 @@ PBL_APP_INFO(MY_UUID,
 Window window;
 TextLayer hello_layer;
 Layer background_layer;
+BitmapLayer arrow_layer;
+GBitmap arrow_bitmap;
+uint8_t buf[10240];
 
 void select_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
   DictionaryIterator *iter;
@@ -49,6 +52,12 @@ void handle_init(AppContextRef ctx) {
   layer_init(&background_layer, GRect(0, 0, 144, 168));
   background_layer.update_proc = background_layer_draw;
 
+  resource_load(resource_get_handle(RESOURCE_ID_PEBBLE_PAGER_ARROW_BLACK), buf, 10240);
+  gbitmap_init_with_data(&arrow_bitmap, buf);
+  bitmap_layer_init(&arrow_layer, GRect(110, 60, 24, 24));
+  bitmap_layer_set_bitmap(&arrow_layer, &arrow_bitmap);
+  bitmap_layer_set_background_color(&arrow_layer, GColorWhite);
+
   text_layer_init(&hello_layer, GRect(0, 65, 144, 30));
   text_layer_set_text_color(&hello_layer, GColorWhite);
   text_layer_set_background_color(&hello_layer, GColorBlack);
@@ -57,6 +66,7 @@ void handle_init(AppContextRef ctx) {
   text_layer_set_font(&hello_layer, fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21));
   layer_add_child(&window.layer, &background_layer);
   layer_add_child(&background_layer, &hello_layer.layer);
+  layer_add_child(&background_layer, &arrow_layer.layer);
   window_set_click_config_provider(&window, (ClickConfigProvider) config_provider);
 }
 
