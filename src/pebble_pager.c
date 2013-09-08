@@ -13,6 +13,7 @@ PBL_APP_INFO(MY_UUID,
 
 Window window;
 TextLayer hello_layer;
+Layer background_layer;
 
 void select_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
   DictionaryIterator *iter;
@@ -35,16 +36,27 @@ void config_provider(ClickConfig **config, Window *window) {
   (void)window;
 }
 
+void background_layer_draw(Layer *layer, GContext *ctx) {
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_fill_rect(ctx, layer->bounds, 0, GCornerNone);
+}
+
 void handle_init(AppContextRef ctx) {
   resource_init_current_app(&VERSION);
   window_init(&window, "Pebble Pager");
   window_stack_push(&window, true /* Animated */);
 
+  layer_init(&background_layer, GRect(0, 0, 144, 168));
+  background_layer.update_proc = background_layer_draw;
+
   text_layer_init(&hello_layer, GRect(0, 65, 144, 30));
+  text_layer_set_text_color(&hello_layer, GColorWhite);
+  text_layer_set_background_color(&hello_layer, GColorBlack);
   text_layer_set_text_alignment(&hello_layer, GTextAlignmentCenter);
   text_layer_set_text(&hello_layer, "Page!");
   text_layer_set_font(&hello_layer, fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21));
-  layer_add_child(&window.layer, &hello_layer.layer);
+  layer_add_child(&window.layer, &background_layer);
+  layer_add_child(&background_layer, &hello_layer.layer);
   window_set_click_config_provider(&window, (ClickConfigProvider) config_provider);
 }
 
