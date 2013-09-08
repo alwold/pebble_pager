@@ -12,11 +12,13 @@ PBL_APP_INFO(MY_UUID,
              APP_INFO_STANDARD_APP);
 
 Window window;
-TextLayer hello_layer;
+TextLayer text_layer;
+TextLayer text_layer2;
 Layer background_layer;
 BitmapLayer arrow_layer;
 GBitmap arrow_bitmap;
 uint8_t buf[10240];
+int started;
 
 void select_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
   DictionaryIterator *iter;
@@ -29,12 +31,18 @@ void select_single_click_handler(ClickRecognizerRef recognizer, Window *window) 
   }
   app_message_out_send();
   app_message_out_release();
-  text_layer_set_text(&hello_layer, "Sent");
+  if (started == 0) {
+    text_layer_set_text(&text_layer2, "to stop");
+    started = 1;
+  } else {
+    text_layer_set_text(&text_layer2, "to page");
+    started = 0;
+  }
 }
 
 void config_provider(ClickConfig **config, Window *window) {
   config[BUTTON_ID_SELECT]->click.handler = (ClickHandler) select_single_click_handler;
-  config[BUTTON_ID_SELECT]->click.repeat_interval_ms = 1000; // "hold-to-repeat" gets overridden if there's a long click handler configured!
+  config[BUTTON_ID_SELECT]->click.repeat_interval_ms = 100; // "hold-to-repeat" gets overridden if there's a long click handler configured!
 
   (void)window;
 }
@@ -45,28 +53,39 @@ void background_layer_draw(Layer *layer, GContext *ctx) {
 }
 
 void handle_init(AppContextRef ctx) {
+  started = 0;
   resource_init_current_app(&VERSION);
   window_init(&window, "Pebble Pager");
   window_stack_push(&window, true /* Animated */);
 
   layer_init(&background_layer, GRect(0, 0, 144, 168));
   background_layer.update_proc = background_layer_draw;
+  layer_add_child(&window.layer, &background_layer);
 
   resource_load(resource_get_handle(RESOURCE_ID_PEBBLE_PAGER_ARROW_BLACK), buf, 10240);
   gbitmap_init_with_data(&arrow_bitmap, buf);
   bitmap_layer_init(&arrow_layer, GRect(110, 60, 24, 24));
   bitmap_layer_set_bitmap(&arrow_layer, &arrow_bitmap);
   bitmap_layer_set_background_color(&arrow_layer, GColorWhite);
-
-  text_layer_init(&hello_layer, GRect(0, 65, 144, 30));
-  text_layer_set_text_color(&hello_layer, GColorWhite);
-  text_layer_set_background_color(&hello_layer, GColorBlack);
-  text_layer_set_text_alignment(&hello_layer, GTextAlignmentCenter);
-  text_layer_set_text(&hello_layer, "Page!");
-  text_layer_set_font(&hello_layer, fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21));
-  layer_add_child(&window.layer, &background_layer);
-  layer_add_child(&background_layer, &hello_layer.layer);
   layer_add_child(&background_layer, &arrow_layer.layer);
+
+  text_layer_init(&text_layer, GRect(0, 24, 144, 30));
+  text_layer_set_text_color(&text_layer, GColorWhite);
+  text_layer_set_background_color(&text_layer, GColorBlack);
+  text_layer_set_text_alignment(&text_layer, GTextAlignmentCenter);
+  text_layer_set_text(&text_layer, "Click select");
+  text_layer_set_font(&text_layer, fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21));
+  layer_add_child(&background_layer, &text_layer.layer);
+
+  text_layer_init(&text_layer2, GRect(0, 90, 144, 30));
+  text_layer_set_text_color(&text_layer2, GColorWhite);
+  text_layer_set_background_color(&text_layer2, GColorBlack);
+  text_layer_set_text_alignment(&text_layer2, GTextAlignmentCenter);
+  text_layer_set_text(&text_layer2, "to page phone");
+  text_layer_set_font(&text_layer2, fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21));
+  layer_add_child(&background_layer, &text_layer2.layer);
+
+
   window_set_click_config_provider(&window, (ClickConfigProvider) config_provider);
 }
 
